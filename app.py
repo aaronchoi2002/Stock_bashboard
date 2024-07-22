@@ -89,7 +89,7 @@ with cols[1]:
     #     class_name="flex gap-2",
     #     key="PE1"
     # )
-tab1, tab2, tab3 = st.tabs(["Details", "DCF Model", "Owl"])
+tab1, tab2, tab3 = st.tabs(["Details", "DCF Model", "Health indicators"])
 with tab1:
     st.markdown(f"<small>All numbers in millions (TTM) ({currency})", unsafe_allow_html=True)
 
@@ -120,7 +120,7 @@ with tab1:
         )
     with cols[2]:
         ui.metric_card(
-            title="Operating Income:",
+            title="O. Income:",
             content=f"{ttm_operating_income / m:,.0f}",
             key="detail2",
         )
@@ -141,31 +141,25 @@ with tab1:
             key="ni_badges"
         )
     cols = st.columns(2)
-    with cols[0]:
-        ui.metric_card(
-            title="Free Cash Flow:",
-            content=f"{free_cash_flow / m:,.0f}",
-            key="detail5"
-        )
-    with cols[1]:
-    # Plot the pie chart
 
-        if df_segment is not None:
-            fig, ax = plt.subplots(figsize=(3, 3))
-            ax.pie(df_segment.iloc[0], labels=df_segment.columns, autopct='%1.1f%%', startangle=140,
-                   textprops={'fontsize': 7})
-            ax.set_title('Revenue by Segment')
-            ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-
-            # Display the chart in Streamlit
-
-            st.pyplot(fig)
-
-        else:
-            st.write("No revenue segment data.")
 
 with tab2:
     st.dataframe(df)
 
 with tab3:
-    st.write("Owl")
+
+    cols = st.columns(2)
+    with cols[0]:
+        color = "green" if r_qoq_change > 0  else "red"
+        st.markdown(f'<div ; padding: 10px;">Quarter Revenue growth > 0 </div>', unsafe_allow_html=True)
+        # Display the stock health indicators
+        st.markdown(f'<div style="background-color: {color}; color: white; padding: 10px;">Revenue growth: {r_qoq_change:.2f}%</div>',
+                    unsafe_allow_html=True)
+
+    with cols[1]:
+        color = "green" if pe < 25 else "red"
+        st.markdown(f'<div ; padding: 10px;">PE Ratio < 25 </div>', unsafe_allow_html=True)
+        # Display the stock health indicators
+        st.markdown(f'<div style="background-color: {color}; color: white; padding: 10px;">PE Ratio: {pe}</div>',
+                    unsafe_allow_html=True)
+
