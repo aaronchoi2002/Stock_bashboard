@@ -52,32 +52,8 @@ def get_cash_equivalents_and_total_debt(stock_code):
     return cash_equivalents, total_debt
 
 #
-def dcf_model(ttm_free_cash_flow, most_recent_year, wacc, cash_equivalents, total_debt, shares_outstanding, s_growth=10.0, l_growth=5.0, f_growth=2.5):
-    years = list(range(most_recent_year - 1, most_recent_year - 1 + 11))
-    fcf = [ttm_free_cash_flow]
 
-    # First 5 years with short-term growth rate
-    for i in range(1, 6):
-        fcf.append(round(fcf[-1] * (1 + s_growth / 100),))
 
-    # Next years with long-term growth rate
-    for i in range(6, 11):
-        fcf.append(round(fcf[-1] * (1 + l_growth / 100),))
-
-    # Calculate terminal value
-    terminal_value = (fcf[-1] * (1 + f_growth / 100)) / (wacc / 100 - f_growth / 100)
-
-    # Create a DataFrame to display the data
-    df = pd.DataFrame({'year': years, 'FCF': fcf})
-    df["FCF_PV"] = df['FCF'] / (1 + wacc / 100) ** df.index
-    terminal_value_pv = terminal_value / (1 + wacc / 100) ** 10
-
-    # Calculate the enterprise value (EV), excluding the first row of present values
-    ev = df["FCF_PV"].iloc[1:].sum() + terminal_value_pv
-    equity_value = ev + cash_equivalents - total_debt
-
-    int_value = round(equity_value / shares_outstanding, 2)
-    return int_value, df
 
 
 
