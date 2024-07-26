@@ -10,7 +10,7 @@ def display_cash_flow_info(ttm_revenue, ttm_gross_profit, ttm_operating_income, 
     cols = st.columns(4)
     with cols[0]:
         ui.metric_card(
-            title="Revenue:",
+            title="Revenue",
             content=f"{ttm_revenue / m:,.0f}",
             key="detail1",
         )
@@ -22,7 +22,7 @@ def display_cash_flow_info(ttm_revenue, ttm_gross_profit, ttm_operating_income, 
 
     with cols[1]:
         ui.metric_card(
-            title="Gross Profit:",
+            title="Gross Profit",
             content=f"{ttm_gross_profit / m:,.0f}",
             key="detail3",
 
@@ -34,7 +34,7 @@ def display_cash_flow_info(ttm_revenue, ttm_gross_profit, ttm_operating_income, 
         )
     with cols[2]:
         ui.metric_card(
-            title="O. Income:",
+            title="O. Income",
             content=f"{ttm_operating_income / m:,.0f}",
             key="detail2",
         )
@@ -45,7 +45,7 @@ def display_cash_flow_info(ttm_revenue, ttm_gross_profit, ttm_operating_income, 
         )
     with cols[3]:
         ui.metric_card(
-            title="Net Income:",
+            title="Net Income",
             content=f"{ttm_net_income / m:,.0f}",
             key="detail4",
         )
@@ -61,7 +61,7 @@ def display_balance_sheet_info(ttm_cashAndCashEquivalents, ttm_totalCurrentAsset
     cols = st.columns(3)
     with cols[0]:
         ui.metric_card(
-            title="Cash & Equivalents:",
+            title="Total Cash & ST Inv.",
             content=f"{ttm_cashAndCashEquivalents / m:,.0f}",
             key="cash",
         )
@@ -69,14 +69,14 @@ def display_balance_sheet_info(ttm_cashAndCashEquivalents, ttm_totalCurrentAsset
 
     with cols[1]:
         ui.metric_card(
-            title="Total Current Assets:",
+            title="Total Current Assets",
             content=f"{ttm_totalCurrentAssets / m:,.0f}",
             key="assets",
         )
         ui.badges( badge_list=[(f"QoQ {tca_qoq_change:.1f}%", "outline"), (f"YoY {tca_yoy_change:.1f}%", "outline")], class_name="flex gap-3", key="tca_badges" )
     with cols[2]:
         ui.metric_card(
-            title="Total Current Liabilities:",
+            title="Total Current Liabilities",
             content=f"{ttm_totalCurrentLiabilities / m:,.0f}",
             key="liabilities",
         )

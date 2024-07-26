@@ -18,7 +18,7 @@ def get_exchange_rate(from_currency, date, to_currency="USD"):
     return exchange_rate
 
 
-def ratio_indicator(current_ratio, cash_equivalents, reportedCurrency, longTermDebt, Share_Issued, fillingDate, totalLiabilities, totalStockholdersEquity):
+def ratio_indicator(current_ratio, cash_equivalents, reportedCurrency, longTermDebt, Share_Issued, fillingDate, totalLiabilities, totalAssets):
 
 
     Net_cash_share = (cash_equivalents - longTermDebt) / Share_Issued
@@ -29,7 +29,7 @@ def ratio_indicator(current_ratio, cash_equivalents, reportedCurrency, longTermD
     exchange_rate = float(exchange_rate)
     Net_cash_share =float(Net_cash_share)
     Net_cash_share = Net_cash_share * exchange_rate
-    debt_ratio = totalLiabilities / totalStockholdersEquity
+    debt_ratio = totalLiabilities / totalAssets
 
 #dispolay
     cols = st.columns(3)
@@ -53,7 +53,37 @@ def ratio_indicator(current_ratio, cash_equivalents, reportedCurrency, longTermD
         )
     with cols[2]:
         ui.metric_card(
-            title="Debt factor:",
+            title="Debt Ratio:",
             content=f"{(debt_ratio):.2f}",
             key="Debt factor",)
 
+
+def ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceivables, ttm_operating_income, ttm_revenue,ttm_totalOtherIncomeExpensesNet, totalAssets, ttm_net_income):
+    quick_ratio = ((cashAndCashEquivalents +netReceivables) / totalCurrentLiabilities)
+    operation_margin = (ttm_operating_income / ttm_revenue) * 100
+    pre_tax_margin = ((ttm_operating_income + ttm_totalOtherIncomeExpensesNet) / ttm_revenue) * 100
+    return_on_assets = (ttm_net_income / totalAssets) * 100
+    cols = st.columns(2)
+    with cols[0]:
+        ui.metric_card(
+            title="Quick Ratio:",
+            content=f"{quick_ratio:.2f}",
+            key="Quick_ratio",
+        )
+        ui.metric_card(
+            title="Pre-tax Margin:",
+            content=f"{pre_tax_margin:.2f}%",
+            key="Pre-tax Margin",
+
+        )
+    with cols[1]:
+        ui.metric_card(
+            title="Operation Margin:",
+            content=f"{operation_margin:.2f}%",
+            key="Operation Margin",
+        )
+        ui.metric_card(
+            title="Return on Assets:",
+            content=f"{return_on_assets:.2f}%",
+            key="Return on Assets",
+        )

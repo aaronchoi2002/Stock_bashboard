@@ -2,9 +2,12 @@ from urllib.request import urlopen
 import pandas as pd
 import requests
 import datetime
+from bs4 import BeautifulSoup
+import streamlit as st
 
 api_key = "e3e1ef68f4575bca8a430996a4e11ed1"
 url = "https://seekingalpha.com/symbol/UBER/growth"
+headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36'}
 
 def stock_info(stock_code):
     url = f"https://financialmodelingprep.com/api/v3/quote/{stock_code.upper()}?apikey={api_key}"
@@ -21,13 +24,15 @@ def stock_info(stock_code):
     pe = stock_data[0].get('pe',0)
     eps = stock_data[0].get('eps',0)
     shares_outstanding = stock_data[0].get('sharesOutstanding',0)
-
+    earningsAnnouncement = stock_data[0].get('earningsAnnouncement',0)
+    earningsAnnouncement = datetime.datetime.strptime(earningsAnnouncement, "%Y-%m-%dT%H:%M:%S.%f%z").date()
 
     # get datetime
     timestamp = stock_data[0].get('timestamp', 0)
     date_time = datetime.datetime.fromtimestamp(timestamp)
 
-    return price, companyName, date_time, year_high, year_low, pe, eps, shares_outstanding
+    return price, companyName, date_time, year_high, year_low, pe, eps, shares_outstanding, earningsAnnouncement
+
 
 
 def get_income_statement(stock_code):
@@ -43,6 +48,7 @@ def get_income_statement(stock_code):
     ttm_gross_profit = round(sum([quarter['grossProfit'] for quarter in stock_data[:4]]), 2)
     ttm_operating_income = round(sum([quarter['operatingIncome'] for quarter in stock_data[:4]]), 2)
     ttm_net_income = round(sum([quarter['netIncome'] for quarter in stock_data[:4]]), 2)
+    ttm_totalOtherIncomeExpensesNet = round(sum([quarter['totalOtherIncomeExpensesNet'] for quarter in stock_data[:4]]), 2)
 
     # Calculate revenue Y-o-Y and Q-o-Q changes
     recent_revenue = stock_data[0]['revenue']
@@ -73,9 +79,7 @@ def get_income_statement(stock_code):
     ni_qoq_change = calculate_growth_check(recent_net_income, previous_quarter_net_income)
     ni_yoy_change = calculate_growth_check(ttm_net_income, previous_ttm_net_income)
 
-
-
-    return (ttm_revenue, ttm_gross_profit, ttm_operating_income, ttm_net_income, most_recent_date, r_qoq_change,
+    return (ttm_revenue, ttm_gross_profit, ttm_operating_income, ttm_net_income, most_recent_date, ttm_totalOtherIncomeExpensesNet, r_qoq_change,
             r_yoy_change, gp_qoq_change, gp_yoy_change , oi_qoq_change, oi_yoy_change, ni_qoq_change, ni_yoy_change)
 
 
@@ -98,46 +102,39 @@ def get_balance_sheet(stock_code):
     response = requests.get(url)
     stock_data = response.json()
 
-    if len(stock_data) < 8:
+    if len(stock_data) < 5:
         raise ValueError("Not enough data")
 
-    ttm_cashAndCashEquivalents = round(sum([quarter['cashAndCashEquivalents'] for quarter in stock_data[:4]]), 2)
-    ttm_totalCurrentAssets = round(sum([quarter['totalCurrentAssets'] for quarter in stock_data[:4]]), 2)
-    ttm_totalCurrentLiabilities = round(sum([quarter['totalCurrentLiabilities'] for quarter in stock_data[:4]]), 2)
+    cashAndCashEquivalents = stock_data[0]['cashAndShortTermInvestments']
+    totalCurrentAssets = stock_data[0]['totalCurrentAssets']
+    totalCurrentLiabilities = stock_data[0]['totalCurrentLiabilities']
 
     # Calculate current ratio
-    current_ratio = ttm_totalCurrentAssets / ttm_totalCurrentLiabilities
+    current_ratio = totalCurrentAssets / totalCurrentLiabilities
 
-    # Calculate cash and cash equivalents Y-o-Y and Q-o-Q changes
-    recent_cashAndCashEquivalents = stock_data[0]['cashAndCashEquivalents']
-    previous_quarter_cashAndCashEquivalents = stock_data[1]['cashAndCashEquivalents']
-    previous_ttm_cashAndCashEquivalents = round(sum([quarter['cashAndCashEquivalents'] for quarter in stock_data[4:8]]), 2)
-    c_qoq_change = calculate_growth_check(recent_cashAndCashEquivalents, previous_quarter_cashAndCashEquivalents)
-    c_yoy_change = calculate_growth_check(ttm_cashAndCashEquivalents, previous_ttm_cashAndCashEquivalents)
-
-    # Calculate total current assets Y-o-Y and Q-o-Q changes
-    recent_totalCurrentAssets = stock_data[0]['totalCurrentAssets']
+    # Calculate QoQ changes
+    previous_quarter_cashAndCashEquivalents = stock_data[1]['cashAndShortTermInvestments']
     previous_quarter_totalCurrentAssets = stock_data[1]['totalCurrentAssets']
-    previous_ttm_totalCurrentAssets = round(sum([quarter['totalCurrentAssets'] for quarter in stock_data[4:8]]), 2)
-    tca_qoq_change = calculate_growth_check(recent_totalCurrentAssets, previous_quarter_totalCurrentAssets)
-    tca_yoy_change = calculate_growth_check(ttm_totalCurrentAssets, previous_ttm_totalCurrentAssets)
-
-    # Calculate total current liabilities Y-o-Y and Q-o-Q changes
-    recent_totalCurrentLiabilities = stock_data[0]['totalCurrentLiabilities']
     previous_quarter_totalCurrentLiabilities = stock_data[1]['totalCurrentLiabilities']
-    previous_ttm_totalCurrentLiabilities = round(sum([quarter['totalCurrentLiabilities'] for quarter in stock_data[4:8]]), 2)
-    tcl_qoq_change = calculate_growth_check(recent_totalCurrentLiabilities, previous_quarter_totalCurrentLiabilities)
-    tcl_yoy_change = calculate_growth_check(ttm_totalCurrentLiabilities, previous_ttm_totalCurrentLiabilities)
 
-    # Calculate previous quarter and previous year's current ratio
+    c_qoq_change = calculate_growth_check(cashAndCashEquivalents, previous_quarter_cashAndCashEquivalents)
+    tca_qoq_change = calculate_growth_check(totalCurrentAssets, previous_quarter_totalCurrentAssets)
+    tcl_qoq_change = calculate_growth_check(totalCurrentLiabilities, previous_quarter_totalCurrentLiabilities)
     previous_quarter_current_ratio = previous_quarter_totalCurrentAssets / previous_quarter_totalCurrentLiabilities
-    previous_year_current_ratio = previous_ttm_totalCurrentAssets / previous_ttm_totalCurrentLiabilities
-
-    # Calculate YoY and QoQ changes for current ratio
     cr_qoq_change = calculate_growth_check(current_ratio, previous_quarter_current_ratio)
+
+    # Calculate YoY changes
+    previous_year_cashAndCashEquivalents = stock_data[4]['cashAndShortTermInvestments']
+    previous_year_totalCurrentAssets = stock_data[4]['totalCurrentAssets']
+    previous_year_totalCurrentLiabilities = stock_data[4]['totalCurrentLiabilities']
+
+    c_yoy_change = calculate_growth_check(cashAndCashEquivalents, previous_year_cashAndCashEquivalents)
+    tca_yoy_change = calculate_growth_check(totalCurrentAssets, previous_year_totalCurrentAssets)
+    tcl_yoy_change = calculate_growth_check(totalCurrentLiabilities, previous_year_totalCurrentLiabilities)
+    previous_year_current_ratio = previous_year_totalCurrentAssets / previous_year_totalCurrentLiabilities
     cr_yoy_change = calculate_growth_check(current_ratio, previous_year_current_ratio)
 
-    return (ttm_cashAndCashEquivalents, ttm_totalCurrentAssets, ttm_totalCurrentLiabilities, current_ratio, c_qoq_change, c_yoy_change,
+    return (cashAndCashEquivalents, totalCurrentAssets, totalCurrentLiabilities, current_ratio, c_qoq_change, c_yoy_change,
             tca_qoq_change, tca_yoy_change, tcl_qoq_change, tcl_yoy_change,
             cr_qoq_change, cr_yoy_change)
 
@@ -194,8 +191,58 @@ def get_balance_sheet_2(stock_code):
     reportedCurrency = stock_data[0].get('reportedCurrency', 0)
     longTermDebt = stock_data[0].get('longTermDebt', 0)
     totalLiabilities = stock_data[0].get('totalLiabilities', 0)
-    totalStockholdersEquity = stock_data[0].get('totalStockholdersEquity', 0)
+    totalAssets = stock_data[0].get('totalAssets', 0)
     date = stock_data[0].get('date', 0)
+    netReceivables = stock_data[0].get('netReceivables', 0)
+    total_debt = stock_data[0].get('totalDebt', 0)
 
 
-    return cash_equivalents, reportedCurrency, longTermDebt, date, totalLiabilities, totalStockholdersEquity
+
+    return cash_equivalents, reportedCurrency, longTermDebt, date, totalLiabilities, totalAssets, netReceivables, total_debt
+
+
+def get_estimated_growth_rate(stock_code):
+    url = f"https://finance.yahoo.com/quote/{stock_code}/analysis"
+
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    # Find the table containing the growth estimates
+    tables = soup.find_all('table')
+    if not tables:
+        raise ValueError("No tables found on the Yahoo Finance page")
+
+    # Look for the row that contains "Next 5 Years (per annum)"
+    for table in tables:
+        rows = table.find_all('tr')
+        for row in rows:
+            if 'Next 5 Years (per annum)' in row.text:
+                growth_rate_text = row.find_all('td')[1].text
+                growth_rate = float(growth_rate_text.strip('%'))   # Convert to decimal
+                return growth_rate
+
+    raise ValueError("No growth rate found for the next 5 years")
+
+def get_stock_price(stock_code):
+    url = f"https://financialmodelingprep.com/api/v3/historical-price-full/{stock_code}?apikey={api_key}"
+    response = requests.get(url)
+    stock_data = response.json()
+
+    if not stock_data:
+        raise ValueError("No data found")
+
+    adjClose = stock_data['historical'][0].get('adjClose', 0)
+    stock_date = stock_data['historical'][0].get('date', 0)
+
+    return adjClose, stock_date
+
+# Get Average_Yield_AAA and AAA_Effective_Yield
+
+def get_AAA():
+    # Get AAA_Effective_Yield
+
+    response = requests.get("https://ycharts.com/indicators/us_coporate_aaa_effective_yield" ,headers=headers)
+    soup = BeautifulSoup(response.text,"html.parser")
+    AAA_Effective_Yield = float(soup.find_all("td",{"class":"col-6"})[5].text.replace("%", ""))
+
+    return AAA_Effective_Yield

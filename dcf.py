@@ -38,20 +38,6 @@ def get_wacc_netdebt(stock_code):
     return wacc, net_debt
 
 
-def get_cash_equivalents_and_total_debt(stock_code):
-    url = f"https://financialmodelingprep.com/api/v3/balance-sheet-statement/{stock_code.upper()}?period=quarter&limit=50&apikey={api_key}"
-    response = requests.get(url)
-    stock_data = response.json()
-
-    if not stock_data:
-        raise ValueError("not enough data")
-
-    cash_equivalents = stock_data[0].get('cashAndShortTermInvestments', 0)
-    total_debt = stock_data[0].get('totalDebt', 0)
-
-    return cash_equivalents, total_debt
-
-#
 
 
 
