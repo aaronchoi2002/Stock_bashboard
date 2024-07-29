@@ -2,13 +2,13 @@ import streamlit_shadcn_ui as ui
 import streamlit as st
 import matplotlib.pyplot as plt
 import pandas as pd
-import requests
+
 import dcf, peer, indicator, historical_pe, shared, info, ratio
 
 
 api_key = "e3e1ef68f4575bca8a430996a4e11ed1"
 
-stock = st.sidebar.text_input("Enter Stock Symbol", value="AAPL", key="stock_symbol")
+stock = st.sidebar.text_input("Enter Stock Symbol", value="AAPL", key="stock_symbol_2")
 
 # Set default growth rates and WACC
 default_s_growth = 5.0
@@ -30,6 +30,8 @@ cashAndCashEquivalents, totalCurrentAssets, totalCurrentLiabilities, current_rat
 free_cash_flow, most_recent_year, currency = dcf.get_ttm_free_cash_flow(stock)
 wacc, net_debt = dcf.get_wacc_netdebt(stock)
 
+# Get peer comparison
+peer = shared.get_stock_peer(stock)
 
 # Get growth rates
 growth_rate = shared.get_estimated_growth_rate(stock)
@@ -37,8 +39,12 @@ growth_rate = shared.get_estimated_growth_rate(stock)
 # get price
 adjClose, stock_date = shared.get_stock_price(stock)
 
+# get sector pe
+sector_pe = shared.get_sector_PE(date_time, sector)
+
+
 #input stock symbol
-Growth_rate = st.sidebar.number_input("Growth Rate (%) - from yahoo", value=growth_rate, key="growth_rate")
+growth_rate = st.sidebar.number_input("Growth Rate (%) - from yahoo", value=growth_rate, key="growth_rate")
 
 
 AAA_Effective_Yield = shared.get_AAA()
@@ -71,8 +77,11 @@ initial_int_value, df = shared.dcf_model(
         shares_outstanding=shares_outstanding
     )
 
-peg = pe/growth_rate
-gbm_value = round((eps * (PE_no_growth + growth_leveraged * Growth_rate))* (1 - margin_safty/100)*(4.4/AAA_Effective_Yield),2)
+if growth_rate <= 0:
+    peg = "N/A"
+else:
+    peg = pe/growth_rate
+gbm_value = round((eps * (PE_no_growth + growth_leveraged * growth_rate))* (1 - margin_safty/100)*(4.4/AAA_Effective_Yield),2)
 
 # if initial_int_value < 0:
 if pe < 0:
@@ -120,17 +129,22 @@ with st.expander("", expanded=True):
                 content=f"{pe}x",
                 key="card2"
             )
+            ui.badges(
+                badge_list=[(f"Sector PE: {sector_pe:.2f}", "outline")],
+                class_name="flex gap-3",
+                key="sector_pe_badges"
+            )
         with cols[1]:
             ui.metric_card(
                 title="EPS:",
                 content=eps,
                 key="card3"
             )
-        ui.badges(
-            badge_list=[(f"PEG Ratio: {peg:.2f}", "outline")],
-            class_name="flex gap-3",
-            key="peg_badges"
-        )
+            ui.badges(
+                badge_list=[(f"PEG Ratio: {peg:.2f}", "outline")],
+                class_name="flex gap-3",
+                key="peg_badges"
+            )
 
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["Details", "Ratio", "DCF Model", "Health indicators", "Peer Comparison"])
@@ -151,4 +165,5 @@ with tab4:
 
 with tab5:
     st.write("Peer Comparison")
+    st.dataframe(peer)
 
