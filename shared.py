@@ -251,3 +251,51 @@ def get_AAA():
     AAA_Effective_Yield = float(soup.find_all("td",{"class":"col-6"})[5].text.replace("%", ""))
 
     return AAA_Effective_Yield
+
+
+def get_stock_peer(stock_code):
+    url = f"https://financialmodelingprep.com/api/v4/stock_peers?symbol={stock_code}&apikey={api_key}"
+    response = requests.get(url)
+    stock_data = response.json()
+
+    if not stock_data:
+        raise ValueError("No data found")
+
+    peers_list = stock_data[0]['peersList']
+
+    # Convert the peers_list to a comma-separated string
+    peers_str = ','.join(peers_list)
+
+    # Construct the URL
+    url = f"https://financialmodelingprep.com/api/v3/quote/{peers_str}?apikey={api_key}"
+
+    # Make the request
+    response = requests.get(url)
+    companies_data = response.json()
+
+    # Store the company information in a DataFrame
+    columns = ['symbol', 'name', 'pe']
+    df_peers = pd.DataFrame(companies_data, columns=columns)
+
+    return df_peers
+
+def get_sector_PE(date, sector):
+    try:
+        date = date.strftime('%Y-%m-%d')
+        url = f"https://financialmodelingprep.com/api/v4/sector_price_earning_ratio?date={date}&exchange=NYSE&apikey={api_key}"
+        response = requests.get(url)
+        stock_data = response.json()
+
+        if not stock_data:
+            raise ValueError("No data found")
+
+        for entry in stock_data:
+            if entry['sector'] == sector:
+                return float(entry['pe'])
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return 0
+
+
+
