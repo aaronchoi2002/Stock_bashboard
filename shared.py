@@ -202,26 +202,31 @@ def get_balance_sheet_2(stock_code):
 
 
 def get_estimated_growth_rate(stock_code):
-    url = f"https://finance.yahoo.com/quote/{stock_code}/analysis"
+    try:
+        url = f"https://finance.yahoo.com/quote/{stock_code}/analysis"
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise HTTPError for bad responses
 
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-    # Find the table containing the growth estimates
-    tables = soup.find_all('table')
-    if not tables:
-        raise ValueError("No tables found on the Yahoo Finance page")
+        # Find the table containing the growth estimates
+        tables = soup.find_all('table')
+        if not tables:
+            raise ValueError("No tables found on the Yahoo Finance page")
 
-    # Look for the row that contains "Next 5 Years (per annum)"
-    for table in tables:
-        rows = table.find_all('tr')
-        for row in rows:
-            if 'Next 5 Years (per annum)' in row.text:
-                growth_rate_text = row.find_all('td')[1].text
-                growth_rate = float(growth_rate_text.strip('%'))   # Convert to decimal
-                return growth_rate
-
-    raise ValueError("No growth rate found for the next 5 years")
+        # Look for the row that contains "Next 5 Years (per annum)"
+        for table in tables:
+            rows = table.find_all('tr')
+            for row in rows:
+                if 'Next 5 Years (per annum)' in row.text:
+                    growth_rate_text = row.find_all('td')[1].text
+                    growth_rate = float(growth_rate_text.strip('%'))   # Convert to decimal
+                    return growth_rate
+        raise ValueError("No growth rate found for the next 5 years")
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        growth_rate = 0
+        return growth_rate
 
 def get_stock_price(stock_code):
     url = f"https://financialmodelingprep.com/api/v3/historical-price-full/{stock_code}?apikey={api_key}"
