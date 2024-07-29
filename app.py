@@ -106,7 +106,7 @@ with st.expander("", expanded=True):
     with cols[0]:
         ui.metric_card(
             title="Price:",
-            content=f"{price:.2f},
+            content=f"{price:.2f}",
             key="card1",
             description=f"Last Updated: {date_time}"
         )
