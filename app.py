@@ -80,7 +80,7 @@ initial_int_value, df = shared.dcf_model(
 if growth_rate <= 0:
     peg = "N/A"
 else:
-    peg = pe/growth_rate
+    peg = roun(pe/growth_rate,2)
 gbm_value = round((eps * (PE_no_growth + growth_leveraged * growth_rate))* (1 - margin_safty/100)*(4.4/AAA_Effective_Yield),2)
 
 # if initial_int_value < 0:
@@ -141,7 +141,7 @@ with st.expander("", expanded=True):
                 key="card3"
             )
             ui.badges(
-                badge_list=[(f"PEG Ratio: {peg:.2f}", "outline")],
+                badge_list=[(f"PEG Ratio: {peg}", "outline")],
                 class_name="flex gap-3",
                 key="peg_badges"
             )
