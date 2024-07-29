@@ -80,7 +80,7 @@ initial_int_value, df = shared.dcf_model(
 if growth_rate <= 0:
     peg = "N/A"
 else:
-    peg = roun(pe/growth_rate,2)
+    peg = round(pe/growth_rate,2)
 gbm_value = round((eps * (PE_no_growth + growth_leveraged * growth_rate))* (1 - margin_safty/100)*(4.4/AAA_Effective_Yield),2)
 
 # if initial_int_value < 0:
