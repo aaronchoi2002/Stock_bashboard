@@ -29,7 +29,7 @@ def stock_list():
     for entry in stock_data:
         if entry.get('exchangeShortName') in ['NASDAQ', 'NYSE'] and entry.get('type') == 'stock':
             stock_list.append(entry.get('symbol'))
-
+    stock_list.sort()  # Sort the list alphabetically    
     return stock_list
 
 us_stock_list = stock_list()
