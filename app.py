@@ -27,7 +27,7 @@ def stock_list():
 
     stock_list = []
     for entry in stock_data:
-        if entry.get('exchangeShortName') == 'NASDAQ':
+        if entry.get('exchangeShortName') in ['NASDAQ', 'NYSE'] and entry.get('type') == 'stock':
             stock_list.append(entry.get('symbol'))
 
     return stock_list
