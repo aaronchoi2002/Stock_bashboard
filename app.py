@@ -8,7 +8,33 @@ import dcf, peer, indicator, historical_pe, shared, info, ratio
 
 api_key = "e3e1ef68f4575bca8a430996a4e11ed1"
 
-stock = st.sidebar.text_input("Enter Stock Symbol", value="AAPL", key="stock_symbol_2")
+@st.cache_data(ttl=604800)  # Cache the data for 1 week (604800 seconds)
+def stock_list():
+    url = f"https://financialmodelingprep.com/api/v3/stock/list?apikey={api_key}"
+    response = requests.get(url)
+
+    try:
+        stock_data = response.json()
+    except ValueError:
+        raise ValueError("Invalid JSON response")
+
+    if not isinstance(stock_data, list):
+        raise ValueError("Unexpected data format, expected a list of stock data")
+
+    if not stock_data:
+        raise ValueError("Not enough data")
+
+    stock_list = []
+    for entry in stock_data:
+        if entry.get('exchangeShortName') == 'NASDAQ':
+            stock_list.append(entry.get('symbol'))
+
+    return stock_list
+
+us_stock_list = stock_list()
+stock = st.sidebar.selectbox("Select Stock Symbol", us_stock_list, index=us_stock_list.index("AAPL"))
+
+#stock = st.sidebar.text_input("Enter Stock Symbol", value="AAPL", key="stock_symbol_2")
 
 # Set default growth rates and WACC
 default_s_growth = 5.0
