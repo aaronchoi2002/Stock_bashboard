@@ -2,6 +2,7 @@ import streamlit_shadcn_ui as ui
 import streamlit as st
 import matplotlib.pyplot as plt
 import pandas as pd
+import requests
 
 import dcf, peer, indicator, historical_pe, shared, info, ratio
 
