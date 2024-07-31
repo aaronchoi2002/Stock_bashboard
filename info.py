@@ -57,7 +57,7 @@ def display_cash_flow_info(ttm_revenue, ttm_gross_profit, ttm_operating_income, 
 
 
 def display_balance_sheet_info(ttm_cashAndCashEquivalents, ttm_totalCurrentAssets, ttm_totalCurrentLiabilities, current_ratio, c_qoq_change, c_yoy_change,tca_qoq_change, tca_yoy_change, tcl_qoq_change, tcl_yoy_change, cr_qoq_change, cr_yoy_change):
-    st.markdown(f"<small>Balance Sheet(TTM)", unsafe_allow_html=True)
+    st.markdown(f"<small>Balance Sheet", unsafe_allow_html=True)
     cols = st.columns(3)
     with cols[0]:
         ui.metric_card(

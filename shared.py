@@ -3,33 +3,45 @@ import pandas as pd
 import requests
 import datetime
 from bs4 import BeautifulSoup
+
 import streamlit as st
 
 api_key = "e3e1ef68f4575bca8a430996a4e11ed1"
 url = "https://seekingalpha.com/symbol/UBER/growth"
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36'}
 
+
 def stock_info(stock_code):
     url = f"https://financialmodelingprep.com/api/v3/quote/{stock_code.upper()}?apikey={api_key}"
     response = requests.get(url)
-    stock_data = response.json()
 
-    if not stock_data:
-        raise ValueError("no data found")
+    try:
+        stock_data = response.json()
 
-    price = stock_data[0].get('price', 0)
-    companyName = stock_data[0].get('name',0)
-    year_high = stock_data[0].get('yearHigh',0)
-    year_low = stock_data[0].get('yearLow',0)
-    pe = stock_data[0].get('pe',0)
-    eps = stock_data[0].get('eps',0)
-    shares_outstanding = stock_data[0].get('sharesOutstanding',0)
-    earningsAnnouncement = stock_data[0].get('earningsAnnouncement',0)
-    earningsAnnouncement = datetime.datetime.strptime(earningsAnnouncement, "%Y-%m-%dT%H:%M:%S.%f%z").date()
+        if not stock_data:
+            raise ValueError("no data found")
 
-    # get datetime
-    timestamp = stock_data[0].get('timestamp', 0)
-    date_time = datetime.datetime.fromtimestamp(timestamp)
+        price = stock_data[0].get('price', "N/A")
+        companyName = stock_data[0].get('name', "N/A")
+        year_high = stock_data[0].get('yearHigh', "N/A")
+        year_low = stock_data[0].get('yearLow', "N/A")
+        pe = stock_data[0].get('pe', "N/A")
+        eps = stock_data[0].get('eps', "N/A")
+        shares_outstanding = stock_data[0].get('sharesOutstanding', "N/A")
+
+        earningsAnnouncement = stock_data[0].get('earningsAnnouncement', "N/A")
+        if earningsAnnouncement != "N/A":
+            earningsAnnouncement = datetime.datetime.strptime(earningsAnnouncement, "%Y-%m-%dT%H:%M:%S.%f%z").date()
+        timestamp = stock_data[0].get('timestamp', "N/A")
+        if timestamp != "N/A":
+            date_time = datetime.datetime.fromtimestamp(timestamp)
+        else:
+            date_time = "N/A"
+
+    except (requests.RequestException, ValueError, KeyError, TypeError):
+
+        earningsAnnouncement = "N/A"
+        date_time = "N/A"
 
     return price, companyName, date_time, year_high, year_low, pe, eps, shares_outstanding, earningsAnnouncement
 
@@ -170,7 +182,9 @@ def dcf_model(ttm_free_cash_flow, most_recent_year, wacc, cash_equivalents, tota
     return int_value, df
 
 def calculate_growth_check(current_value, previous_value):
-    if current_value >= 0 and previous_value >= 0:
+    if previous_value == 0:
+        return 0
+    elif current_value >= 0 and previous_value >= 0:
         return ((current_value - previous_value) / previous_value) * 100
     elif current_value < 0 and previous_value < 0:
         return ((current_value - previous_value) / abs(previous_value)) * 100
@@ -187,7 +201,6 @@ def get_balance_sheet_2(stock_code):
     if not stock_data:
         raise ValueError("not enough data")
 
-    cash_equivalents = stock_data[0].get('cashAndShortTermInvestments', 0)
     reportedCurrency = stock_data[0].get('reportedCurrency', 0)
     longTermDebt = stock_data[0].get('longTermDebt', 0)
     totalLiabilities = stock_data[0].get('totalLiabilities', 0)
@@ -198,7 +211,7 @@ def get_balance_sheet_2(stock_code):
 
 
 
-    return cash_equivalents, reportedCurrency, longTermDebt, date, totalLiabilities, totalAssets, netReceivables, total_debt
+    return reportedCurrency, longTermDebt, date, totalLiabilities, totalAssets, netReceivables, total_debt
 
 
 def get_estimated_growth_rate(stock_code):
@@ -259,9 +272,13 @@ def get_stock_peer(stock_code):
     stock_data = response.json()
 
     if not stock_data:
-        raise ValueError("No data found")
+        # Return an empty DataFrame or a DataFrame with 'N/A'
+        return pd.DataFrame(columns=['symbol', 'name', 'pe'], data=[['N/A', 'N/A', 'N/A']])
 
-    peers_list = stock_data[0]['peersList']
+    peers_list = stock_data[0].get('peersList', [])
+
+    if not peers_list:
+        return pd.DataFrame(columns=['symbol', 'name', 'pe'], data=[['N/A', 'N/A', 'N/A']])
 
     # Convert the peers_list to a comma-separated string
     peers_str = ','.join(peers_list)
@@ -276,6 +293,10 @@ def get_stock_peer(stock_code):
     # Store the company information in a DataFrame
     columns = ['symbol', 'name', 'pe']
     df_peers = pd.DataFrame(companies_data, columns=columns)
+
+    # If no data is returned, return a DataFrame with 'N/A'
+    if df_peers.empty:
+        df_peers = pd.DataFrame(columns=columns, data=[['N/A', 'N/A', 'N/A']])
 
     return df_peers
 
@@ -297,6 +318,26 @@ def get_sector_PE(date, sector):
         print(f"Error occurred: {e}")
         return 0
 
+
+def get_industry_PE(date, industry):
+    try:
+        date = date.strftime('%Y-%m-%d')
+        url = f"https://financialmodelingprep.com/api/v4/industry_price_earning_ratio?date={date}&exchange=NYSE&apikey={api_key}"
+        response = requests.get(url)
+        stock_data = response.json()
+
+        if not stock_data:
+            raise ValueError("No data found")
+
+        for entry in stock_data:
+            if entry['industry'] == industry:
+                return float(entry['pe'])
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return 0
+
+@st.cache_data(ttl=604800)  # Cache the data for 1 week (604800 seconds)
 def stock_list():
     url = f"https://financialmodelingprep.com/api/v3/stock/list?apikey={api_key}"
     response = requests.get(url)
@@ -314,8 +355,9 @@ def stock_list():
 
     stock_list = []
     for entry in stock_data:
-        if entry.get('exchangeShortName') == 'NASDAQ':
-            stock_list.append(entry.get('symbol'))
+        symbol = entry.get('symbol')
+        if entry.get('exchangeShortName') in ['NASDAQ', 'NYSE'] and entry.get('type') == 'stock' and '-' not in symbol:
+            stock_list.append(symbol)
 
+    stock_list.sort()  # Sort the list alphabetically
     return stock_list
-

@@ -2,7 +2,6 @@ import streamlit_shadcn_ui as ui
 import streamlit as st
 import requests
 
-
 api_key = "e3e1ef68f4575bca8a430996a4e11ed1"
 
 
@@ -18,20 +17,25 @@ def get_exchange_rate(from_currency, date, to_currency="USD"):
     return exchange_rate
 
 
-def ratio_indicator(current_ratio, cash_equivalents, reportedCurrency, longTermDebt, Share_Issued, fillingDate, totalLiabilities, totalAssets):
+def safe_division(numerator, denominator):
+    return numerator / denominator if denominator != 0 else 0
 
 
-    Net_cash_share = (cash_equivalents - longTermDebt) / Share_Issued
+def ratio_indicator(current_ratio, cash_equivalents, reportedCurrency, longTermDebt, Share_Issued, fillingDate,
+                    totalLiabilities, totalAssets):
+    Net_cash_share = safe_division(cash_equivalents - longTermDebt, Share_Issued)
+
     if reportedCurrency != "USD":
         exchange_rate = get_exchange_rate(reportedCurrency, date=fillingDate)
     else:
         exchange_rate = 1
-    exchange_rate = float(exchange_rate)
-    Net_cash_share =float(Net_cash_share)
-    Net_cash_share = Net_cash_share * exchange_rate
-    debt_ratio = totalLiabilities / totalAssets
 
-#dispolay
+    exchange_rate = float(exchange_rate)
+    Net_cash_share = float(Net_cash_share)
+    Net_cash_share = Net_cash_share * exchange_rate
+    debt_ratio = safe_division(totalLiabilities, totalAssets)
+
+    # Display
     cols = st.columns(3)
     with cols[0]:
         ui.metric_card(
@@ -40,29 +44,26 @@ def ratio_indicator(current_ratio, cash_equivalents, reportedCurrency, longTermD
             key="Current_ratio",
         )
     with cols[1]:
-        #st.write(cash_equivalents)
-        #st.write(longTermDebt)
-        #st.write(Share_Issued)
-        #st.write(exchange_rate)
-        #st.write(cash_equivalents * exchange_rate)
-        #st.write(longTermDebt * exchange_rate)
         ui.metric_card(
             title="Net cash per share:",
-            content=f"{(Net_cash_share):.2f}",
+            content=f"{Net_cash_share:.2f}",
             key="Net cash per share:",
         )
     with cols[2]:
         ui.metric_card(
             title="Debt Ratio:",
-            content=f"{(debt_ratio):.2f}",
-            key="Debt factor",)
+            content=f"{debt_ratio:.2f}",
+            key="Debt factor",
+        )
 
 
-def ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceivables, ttm_operating_income, ttm_revenue,ttm_totalOtherIncomeExpensesNet, totalAssets, ttm_net_income):
-    quick_ratio = ((cashAndCashEquivalents +netReceivables) / totalCurrentLiabilities)
-    operation_margin = (ttm_operating_income / ttm_revenue) * 100
-    pre_tax_margin = ((ttm_operating_income + ttm_totalOtherIncomeExpensesNet) / ttm_revenue) * 100
-    return_on_assets = (ttm_net_income / totalAssets) * 100
+def ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceivables, ttm_operating_income,
+                      ttm_revenue, ttm_totalOtherIncomeExpensesNet, totalAssets, ttm_net_income):
+    quick_ratio = safe_division(cashAndCashEquivalents + netReceivables, totalCurrentLiabilities)
+    operation_margin = safe_division(ttm_operating_income, ttm_revenue) * 100
+    pre_tax_margin = safe_division(ttm_operating_income + ttm_totalOtherIncomeExpensesNet, ttm_revenue) * 100
+    return_on_assets = safe_division(ttm_net_income, totalAssets) * 100
+
     cols = st.columns(2)
     with cols[0]:
         ui.metric_card(
@@ -74,7 +75,6 @@ def ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceiv
             title="Pre-tax Margin:",
             content=f"{pre_tax_margin:.2f}%",
             key="Pre-tax Margin",
-
         )
     with cols[1]:
         ui.metric_card(

@@ -33,8 +33,12 @@ def get_wacc_netdebt(stock_code):
     stock = json.loads(stock)
     stock = pd.json_normalize(stock).T
 
-    wacc = round(stock.loc["wacc"].iloc[0], 2) if type(stock.loc["wacc"].iloc[0]) == float else 0.0
-    net_debt = stock.loc["netDebt"].iloc[0]
+    try:
+        wacc = round(stock.loc["wacc"].iloc[0], 2) if type(stock.loc["wacc"].iloc[0]) == float else 0.0
+        net_debt = stock.loc["netDebt"].iloc[0]
+    except KeyError:
+        wacc = 0.0
+        net_debt = 0.0
     return wacc, net_debt
 
 
