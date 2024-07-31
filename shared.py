@@ -297,5 +297,25 @@ def get_sector_PE(date, sector):
         print(f"Error occurred: {e}")
         return 0
 
+def stock_list():
+    url = f"https://financialmodelingprep.com/api/v3/stock/list?apikey={api_key}"
+    response = requests.get(url)
 
+    try:
+        stock_data = response.json()
+    except ValueError:
+        raise ValueError("Invalid JSON response")
+
+    if not isinstance(stock_data, list):
+        raise ValueError("Unexpected data format, expected a list of stock data")
+
+    if not stock_data:
+        raise ValueError("Not enough data")
+
+    stock_list = []
+    for entry in stock_data:
+        if entry.get('exchangeShortName') == 'NASDAQ':
+            stock_list.append(entry.get('symbol'))
+
+    return stock_list
 
