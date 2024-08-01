@@ -21,8 +21,8 @@ def safe_division(numerator, denominator):
     return numerator / denominator if denominator != 0 else 0
 
 
-def ratio_indicator(current_ratio, cash_equivalents, reportedCurrency, longTermDebt, Share_Issued, fillingDate,
-                    totalLiabilities, totalAssets):
+def ratio_indicator(current_ratio, average_current_ratio, cash_equivalents, reportedCurrency, longTermDebt, Share_Issued, fillingDate,
+                    totalLiabilities, totalAssets, average_debt_ratio):
     Net_cash_share = safe_division(cash_equivalents - longTermDebt, Share_Issued)
 
     if reportedCurrency != "USD":
@@ -40,8 +40,13 @@ def ratio_indicator(current_ratio, cash_equivalents, reportedCurrency, longTermD
     with cols[0]:
         ui.metric_card(
             title="Current_ratio:",
-            content=f"{(current_ratio * 100):.2f}%",
+            content=f"{current_ratio}",
             key="Current_ratio",
+        )
+        ui.badges(
+            badge_list=[(f"Average: {average_current_ratio}", "default")],
+            class_name="flex gap-3",
+            key="average_current_ratio_badges"
         )
     with cols[1]:
         ui.metric_card(
@@ -55,10 +60,16 @@ def ratio_indicator(current_ratio, cash_equivalents, reportedCurrency, longTermD
             content=f"{debt_ratio:.2f}",
             key="Debt factor",
         )
+        ui.badges(
+            badge_list=[(f"Average: {average_debt_ratio:.2f}", "default")],
+            class_name="flex gap-3",
+            key="average_debt_ratio_badges"
+        )
 
 
-def ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceivables, ttm_operating_income,
-                      ttm_revenue, ttm_totalOtherIncomeExpensesNet, totalAssets, ttm_net_income):
+def ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceivables, average_quick_ratio, ttm_operating_income,
+                      ttm_revenue, ttm_totalOtherIncomeExpensesNet, totalAssets, ttm_net_income, average_operation_margin):
+
     quick_ratio = safe_division(cashAndCashEquivalents + netReceivables, totalCurrentLiabilities)
     operation_margin = safe_division(ttm_operating_income, ttm_revenue) * 100
     pre_tax_margin = safe_division(ttm_operating_income + ttm_totalOtherIncomeExpensesNet, ttm_revenue) * 100
@@ -71,6 +82,11 @@ def ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceiv
             content=f"{quick_ratio:.2f}",
             key="Quick_ratio",
         )
+        ui.badges(
+            badge_list=[(f"Average: {average_quick_ratio:.2f}", "default")],
+            class_name="flex gap-3",
+            key="average_quick_ratio_badges"
+        )
         ui.metric_card(
             title="Pre-tax Margin:",
             content=f"{pre_tax_margin:.2f}%",
@@ -81,6 +97,11 @@ def ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceiv
             title="Operation Margin:",
             content=f"{operation_margin:.2f}%",
             key="Operation Margin",
+        )
+        ui.badges(
+            badge_list=[(f"Average: {(average_operation_margin*100):.1f}%", "default")],
+            class_name="flex gap-3",
+            key="average_operation_margin_badges"
         )
         ui.metric_card(
             title="Return on Assets:",

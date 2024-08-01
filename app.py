@@ -42,7 +42,11 @@ growth_rate = shared.get_estimated_growth_rate(stock)
 
 # get price
 adjClose, stock_date = shared.get_stock_price(stock)
-#
+
+#get 5 years average
+average_current_ratio,average_debt_ratio, average_quick_ratio = shared.five_years_average_BS(stock, shares_outstanding)
+average_operation_margin = shared.five_years_average_IS(stock)
+
 
 # data cleaning
 pe = round(pe, 2) if isinstance(pe, float) else "N/A"
@@ -99,8 +103,10 @@ if growth_rate <= 0:
 else:
     peg = round(pe/growth_rate, 2)
 
-
-gbm_value = round((eps * (PE_no_growth + growth_leveraged * growth_rate))* (1 - margin_safty/100)*(4.4/AAA_Effective_Yield),2)
+try:
+    gbm_value = round((eps * (PE_no_growth + growth_leveraged * growth_rate))* (1 - margin_safty/100)*(4.4/AAA_Effective_Yield),2)
+except TypeError:
+    gbm_value = "N/A"
 initial_int_value = round(initial_int_value * (1 - margin_safty/100),2)
 # if initial_int_value < 0:
 
@@ -175,8 +181,8 @@ with tab1:
     info.display_balance_sheet_info(cashAndCashEquivalents, totalCurrentAssets, totalCurrentLiabilities, current_ratio, c_qoq_change, c_yoy_change,tca_qoq_change, tca_yoy_change, tcl_qoq_change, tcl_yoy_change, cr_qoq_change, cr_yoy_change)
 
 with tab2:
-    ratio.ratio_indicator(current_ratio, cashAndCashEquivalents, reportedCurrency, longTermDebt, shares_outstanding, date, totalLiabilities, totalAssets)
-    ratio.ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceivables, ttm_operating_income, ttm_revenue, ttm_totalOtherIncomeExpensesNet, totalAssets, ttm_net_income)
+    ratio.ratio_indicator(current_ratio, average_current_ratio, cashAndCashEquivalents, reportedCurrency, longTermDebt, shares_outstanding, date, totalLiabilities, totalAssets, average_debt_ratio)
+    ratio.ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceivables, average_quick_ratio, ttm_operating_income, ttm_revenue, ttm_totalOtherIncomeExpensesNet, totalAssets, ttm_net_income, average_operation_margin)
 with tab3:
     st.dataframe(df)
 

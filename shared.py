@@ -122,7 +122,7 @@ def get_balance_sheet(stock_code):
     totalCurrentLiabilities = stock_data[0]['totalCurrentLiabilities']
 
     # Calculate current ratio
-    current_ratio = totalCurrentAssets / totalCurrentLiabilities
+    current_ratio = round((totalCurrentAssets / totalCurrentLiabilities),2)
 
     # Calculate QoQ changes
     previous_quarter_cashAndCashEquivalents = stock_data[1]['cashAndShortTermInvestments']
@@ -361,3 +361,65 @@ def stock_list():
 
     stock_list.sort()  # Sort the list alphabetically
     return stock_list
+
+def safe_division(numerator, denominator):
+    return numerator / denominator if denominator != 0 else 0
+
+def get_current_ratio(data):
+    totalCurrentAssets = data['totalCurrentAssets']
+    totalCurrentLiabilities = data['totalCurrentLiabilities']
+    current_ratio = safe_division(totalCurrentAssets, totalCurrentLiabilities)
+    return current_ratio
+
+def get_Debt_ratio(data):
+    totalLiabilities = data['totalLiabilities']
+    totalAssets = data['totalAssets']
+    debt_ratio = safe_division(totalLiabilities, totalAssets)
+    return debt_ratio
+
+def get_quick_ratio(data):
+    cashAndCashEquivalents = data['cashAndShortTermInvestments']
+    netReceivables = data['netReceivables']
+    totalCurrentLiabilities = data['totalCurrentLiabilities']
+    quick_ratio = safe_division(cashAndCashEquivalents + netReceivables, totalCurrentLiabilities)
+    return quick_ratio
+
+
+def get_operation_margin(data):
+    operatingIncome = data['operatingIncome']
+    revenue = data['revenue']
+    operating_margin = safe_division(operatingIncome, revenue)
+    return operating_margin
+
+def five_years_average_BS(stock_code, shares_outstanding):
+    url = f"https://financialmodelingprep.com/api/v3/balance-sheet-statement/{stock_code.upper()}?period=annual&limit=8&apikey={api_key}"
+    response = requests.get(url)
+    stock_data = response.json()
+
+    if len(stock_data) < 5:
+        return "N/A"
+
+    current_ratios = [get_current_ratio(year_data) for year_data in stock_data[:5]]
+    debt_ratios = [get_Debt_ratio(year_data) for year_data in stock_data[:5]]
+    quick_ratios = [get_quick_ratio(year_data) for year_data in stock_data[:5]]
+
+    average_current_ratio = round(sum(current_ratios) / len(current_ratios),2)
+    average_debt_ratio = round(sum(debt_ratios) / len(debt_ratios),2)
+    average_quick_ratio = round(sum(quick_ratios) / len(quick_ratios),2)
+
+    return average_current_ratio, average_debt_ratio, average_quick_ratio
+
+def five_years_average_IS(stock_code):
+    url = f"https://financialmodelingprep.com/api/v3/income-statement/{stock_code.upper()}?period=annual&limit=8&apikey={api_key}"
+    response = requests.get(url)
+    stock_data = response.json()
+
+    if len(stock_data) < 5:
+        return "N/A"
+
+    operation_margin = [get_operation_margin(year_data) for year_data in stock_data[:5]]
+
+    average_operation_margin = (sum(operation_margin) / len(operation_margin))
+
+    return average_operation_margin
+
