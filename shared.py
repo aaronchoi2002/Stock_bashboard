@@ -391,6 +391,16 @@ def get_operation_margin(data):
     operating_margin = safe_division(operatingIncome, revenue)
     return operating_margin
 
+def get_roa(data):
+    roa = data['returnOnAssets']
+    return roa
+
+def get_pretax(data):
+    pretax = data['pretaxProfitMargin']
+    return pretax
+
+
+
 def five_years_average_BS(stock_code, shares_outstanding):
     url = f"https://financialmodelingprep.com/api/v3/balance-sheet-statement/{stock_code.upper()}?period=annual&limit=8&apikey={api_key}"
     response = requests.get(url)
@@ -402,6 +412,8 @@ def five_years_average_BS(stock_code, shares_outstanding):
     current_ratios = [get_current_ratio(year_data) for year_data in stock_data[:5]]
     debt_ratios = [get_Debt_ratio(year_data) for year_data in stock_data[:5]]
     quick_ratios = [get_quick_ratio(year_data) for year_data in stock_data[:5]]
+
+
 
     average_current_ratio = round(sum(current_ratios) / len(current_ratios),2)
     average_debt_ratio = round(sum(debt_ratios) / len(debt_ratios),2)
@@ -423,3 +435,19 @@ def five_years_average_IS(stock_code):
 
     return average_operation_margin
 
+
+def five_years_average_ratio(stock_code):
+    url =f"https://financialmodelingprep.com/api/v3/ratios/{stock_code.upper()}?period=annual&apikey={api_key}"
+    response = requests.get(url)
+    stock_data = response.json()
+
+    if len(stock_data) < 5:
+        return "N/A"
+
+    roa = [get_roa(year_data) for year_data in stock_data[:5]]
+    pre_tax = [get_pretax(year_data) for year_data in stock_data[:5]]
+
+    average_roa = round((sum(roa) / len(roa))*100 ,2)
+    average_pre_tax = round((sum(pre_tax) / len(pre_tax))*100 ,2)
+
+    return average_roa, average_pre_tax

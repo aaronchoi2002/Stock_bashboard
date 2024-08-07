@@ -10,7 +10,7 @@ api_key = "e3e1ef68f4575bca8a430996a4e11ed1"
 
 
 us_stock_list = shared.stock_list()
-stock = st.sidebar.selectbox("Select Stock Symbol", us_stock_list, index=us_stock_list.index("AAPL"))
+stock = st.sidebar.selectbox("Select Stock Symbol", us_stock_list, index=us_stock_list.index("AAPL"),key="us_stock_input")
 
 
 # Set default growth rates and WACC
@@ -46,6 +46,7 @@ adjClose, stock_date = shared.get_stock_price(stock)
 #get 5 years average
 average_current_ratio,average_debt_ratio, average_quick_ratio = shared.five_years_average_BS(stock, shares_outstanding)
 average_operation_margin = shared.five_years_average_IS(stock)
+roa, average_pre_tax = shared.five_years_average_ratio(stock)
 
 
 # data cleaning
@@ -64,7 +65,7 @@ industry_pe = round(industry_pe, 1) if isinstance(industry_pe, float) else "N/A"
 
 
 
-#
+
 #input stock symbol
 growth_rate = st.sidebar.number_input("Growth Rate (%) - from yahoo", value=growth_rate, key="growth_rate")
 #
@@ -117,6 +118,11 @@ if not isinstance(pe, float) or pe < 0:
 if not isinstance(eps, float) or eps < 0:
     gbm_value = "N/A"
 
+if eps > 0:
+    pe_multiple = round(price/eps, 2)
+else:
+    pe_multiple = "N/A"
+
 #
 #
 # # Display the company information and initial metrics
@@ -160,6 +166,11 @@ with st.expander("", expanded=True):
                 class_name="flex gap-3",
                 key="sector_pe_badges"
             )
+            ui.badges(
+                badge_list=[(f"PEG Ratio: {peg}", "outline")],
+                class_name="flex gap-3",
+                key="peg_badges"
+            )
 
         with cols[1]:
             ui.metric_card(
@@ -168,10 +179,12 @@ with st.expander("", expanded=True):
                 key="card3"
             )
             ui.badges(
-                badge_list=[(f"PEG Ratio: {peg}", "outline")],
+                badge_list=[(f"PE Multiple: {pe_multiple}", "outline")],
                 class_name="flex gap-3",
-                key="peg_badges"
+                key="pe_multiple_badges"
+
             )
+
 #
 #
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["Details", "Ratio", "DCF Model", "Health indicators", "Peer Comparison"])
@@ -182,7 +195,7 @@ with tab1:
 
 with tab2:
     ratio.ratio_indicator(current_ratio, average_current_ratio, cashAndCashEquivalents, reportedCurrency, longTermDebt, shares_outstanding, date, totalLiabilities, totalAssets, average_debt_ratio)
-    ratio.ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceivables, average_quick_ratio, ttm_operating_income, ttm_revenue, ttm_totalOtherIncomeExpensesNet, totalAssets, ttm_net_income, average_operation_margin)
+    ratio.ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceivables, average_quick_ratio, ttm_operating_income, ttm_revenue, ttm_totalOtherIncomeExpensesNet, totalAssets, ttm_net_income, average_operation_margin, roa, average_pre_tax)
 with tab3:
     st.dataframe(df)
 

@@ -68,7 +68,7 @@ def ratio_indicator(current_ratio, average_current_ratio, cash_equivalents, repo
 
 
 def ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceivables, average_quick_ratio, ttm_operating_income,
-                      ttm_revenue, ttm_totalOtherIncomeExpensesNet, totalAssets, ttm_net_income, average_operation_margin):
+                      ttm_revenue, ttm_totalOtherIncomeExpensesNet, totalAssets, ttm_net_income, average_operation_margin, roa, average_pre_tax):
 
     quick_ratio = safe_division(cashAndCashEquivalents + netReceivables, totalCurrentLiabilities)
     operation_margin = safe_division(ttm_operating_income, ttm_revenue) * 100
@@ -92,6 +92,11 @@ def ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceiv
             content=f"{pre_tax_margin:.2f}%",
             key="Pre-tax Margin",
         )
+        ui.badges(
+            badge_list=[(f"Average: {average_pre_tax}%", "default")],
+            class_name="flex gap-3",
+            key="average_pre_tax_badges"
+        )
     with cols[1]:
         ui.metric_card(
             title="Operation Margin:",
@@ -107,4 +112,9 @@ def ratio_indicator_2(cashAndCashEquivalents, totalCurrentLiabilities, netReceiv
             title="Return on Assets:",
             content=f"{return_on_assets:.2f}%",
             key="Return on Assets",
+        )
+        ui.badges(
+            badge_list=[(f"Average: {(roa)}%", "default")],
+            class_name="flex gap-3",
+            key="average_roa_badges"
         )
