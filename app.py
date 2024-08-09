@@ -27,8 +27,8 @@ sector, industry = shared.company_info(stock)
 ttm_revenue, ttm_gross_profit, ttm_operating_income, ttm_net_income, most_recent_date, ttm_totalOtherIncomeExpensesNet, r_qoq_change, r_yoy_change, gp_qoq_change, gp_yoy_change, oi_qoq_change, oi_yoy_change, ni_qoq_change, ni_yoy_change = shared.get_income_statement(stock)
 #
 # # CAll functions balance sheet module
-cashAndCashEquivalents, totalCurrentAssets, totalCurrentLiabilities, current_ratio, c_qoq_change, c_yoy_change,tca_qoq_change, tca_yoy_change, tcl_qoq_change, tcl_yoy_change, cr_qoq_change, cr_yoy_change = shared.get_balance_sheet(stock)
-reportedCurrency, longTermDebt, date, totalLiabilities, totalAssets, netReceivables, total_debt = shared.get_balance_sheet_2(stock)
+cashAndCashEquivalents, totalCurrentAssets, totalCurrentLiabilities, current_ratio, c_qoq_change, c_yoy_change,tca_qoq_change, tca_yoy_change, tcl_qoq_change, tcl_yoy_change, cr_qoq_change, cr_yoy_change, inventory_qoq_change, inventory_yoy_change = shared.get_balance_sheet(stock)
+reportedCurrency, longTermDebt, date, totalLiabilities, totalAssets, netReceivables, total_debt, inventory = shared.get_balance_sheet_2(stock)
 
 # # Call functions from the DCF module
 free_cash_flow, most_recent_year, currency = dcf.get_ttm_free_cash_flow(stock)
@@ -109,6 +109,9 @@ try:
 except TypeError:
     gbm_value = "N/A"
 initial_int_value = round(initial_int_value * (1 - margin_safty/100),2)
+
+peter_lynch_value = round(eps * s_growth)
+
 # if initial_int_value < 0:
 
 if not isinstance(pe, float) or pe < 0:
@@ -149,7 +152,7 @@ with st.expander("", expanded=True):
         )
 #
         ui.badges(
-            badge_list=[(f"DCF: {initial_int_value}", "outline"), (f"GBM: {gbm_value}", "outline")],
+            badge_list=[(f"DCF: {initial_int_value}", "outline"), (f"GBM: {gbm_value}", "outline"),(f"Peter Lynch: {peter_lynch_value}", "outline")],
             class_name="flex gap-3",
             key="badges3"
         )
@@ -191,7 +194,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["Details", "Ratio", "DCF Model", "Health
 with tab1:
     info.display_cash_flow_info(ttm_revenue, ttm_gross_profit, ttm_operating_income, ttm_net_income, currency, r_qoq_change,
                       r_yoy_change, gp_qoq_change, gp_yoy_change, oi_qoq_change, oi_yoy_change, ni_qoq_change, ni_yoy_change)
-    info.display_balance_sheet_info(cashAndCashEquivalents, totalCurrentAssets, totalCurrentLiabilities, current_ratio, c_qoq_change, c_yoy_change,tca_qoq_change, tca_yoy_change, tcl_qoq_change, tcl_yoy_change, cr_qoq_change, cr_yoy_change)
+    info.display_balance_sheet_info(cashAndCashEquivalents, totalCurrentAssets, totalCurrentLiabilities, inventory, c_qoq_change, c_yoy_change,tca_qoq_change, tca_yoy_change, tcl_qoq_change, tcl_yoy_change, cr_qoq_change, cr_yoy_change, inventory_qoq_change, inventory_yoy_change)
 
 with tab2:
     ratio.ratio_indicator(current_ratio, average_current_ratio, cashAndCashEquivalents, reportedCurrency, longTermDebt, shares_outstanding, date, totalLiabilities, totalAssets, average_debt_ratio)

@@ -120,6 +120,7 @@ def get_balance_sheet(stock_code):
     cashAndCashEquivalents = stock_data[0]['cashAndShortTermInvestments']
     totalCurrentAssets = stock_data[0]['totalCurrentAssets']
     totalCurrentLiabilities = stock_data[0]['totalCurrentLiabilities']
+    inventory = stock_data[0]['inventory']
 
     # Calculate current ratio
     current_ratio = round((totalCurrentAssets / totalCurrentLiabilities),2)
@@ -128,27 +129,31 @@ def get_balance_sheet(stock_code):
     previous_quarter_cashAndCashEquivalents = stock_data[1]['cashAndShortTermInvestments']
     previous_quarter_totalCurrentAssets = stock_data[1]['totalCurrentAssets']
     previous_quarter_totalCurrentLiabilities = stock_data[1]['totalCurrentLiabilities']
+    previous_quarter_inventory = stock_data[1]['inventory']
 
     c_qoq_change = calculate_growth_check(cashAndCashEquivalents, previous_quarter_cashAndCashEquivalents)
     tca_qoq_change = calculate_growth_check(totalCurrentAssets, previous_quarter_totalCurrentAssets)
     tcl_qoq_change = calculate_growth_check(totalCurrentLiabilities, previous_quarter_totalCurrentLiabilities)
     previous_quarter_current_ratio = previous_quarter_totalCurrentAssets / previous_quarter_totalCurrentLiabilities
     cr_qoq_change = calculate_growth_check(current_ratio, previous_quarter_current_ratio)
+    inventory_qoq_change = calculate_growth_check(inventory, previous_quarter_inventory)
 
     # Calculate YoY changes
     previous_year_cashAndCashEquivalents = stock_data[4]['cashAndShortTermInvestments']
     previous_year_totalCurrentAssets = stock_data[4]['totalCurrentAssets']
     previous_year_totalCurrentLiabilities = stock_data[4]['totalCurrentLiabilities']
+    previous_quarter_inventory = stock_data[4]['inventory']
 
     c_yoy_change = calculate_growth_check(cashAndCashEquivalents, previous_year_cashAndCashEquivalents)
     tca_yoy_change = calculate_growth_check(totalCurrentAssets, previous_year_totalCurrentAssets)
     tcl_yoy_change = calculate_growth_check(totalCurrentLiabilities, previous_year_totalCurrentLiabilities)
     previous_year_current_ratio = previous_year_totalCurrentAssets / previous_year_totalCurrentLiabilities
     cr_yoy_change = calculate_growth_check(current_ratio, previous_year_current_ratio)
+    inventory_yoy_change = calculate_growth_check(inventory, previous_quarter_inventory)
 
     return (cashAndCashEquivalents, totalCurrentAssets, totalCurrentLiabilities, current_ratio, c_qoq_change, c_yoy_change,
             tca_qoq_change, tca_yoy_change, tcl_qoq_change, tcl_yoy_change,
-            cr_qoq_change, cr_yoy_change)
+            cr_qoq_change, cr_yoy_change, inventory_qoq_change, inventory_yoy_change)
 
 
 
@@ -208,10 +213,11 @@ def get_balance_sheet_2(stock_code):
     date = stock_data[0].get('date', 0)
     netReceivables = stock_data[0].get('netReceivables', 0)
     total_debt = stock_data[0].get('totalDebt', 0)
+    inventory = stock_data[0].get('inventory', 0)
 
 
 
-    return reportedCurrency, longTermDebt, date, totalLiabilities, totalAssets, netReceivables, total_debt
+    return reportedCurrency, longTermDebt, date, totalLiabilities, totalAssets, netReceivables, total_debt, inventory
 
 
 def get_estimated_growth_rate(stock_code):
